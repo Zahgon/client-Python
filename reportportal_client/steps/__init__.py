@@ -101,12 +101,7 @@ class StepReporter:
         :param start_time: Nested Step start time
         :param parameters: Nested Step parameters
         """
-        parent_id = self.client.current_item()
-        if not parent_id:
-            return None
-        return self.client.start_test_item(
-            name, start_time, "step", has_stats=False, parameters=parameters, parent_item_id=parent_id
-        )
+        pass
 
     def finish_nested_step(
         self,
@@ -121,7 +116,7 @@ class StepReporter:
         :param end_time: Nested Step finish time
         :param status:   Nested Step finish status
         """
-        return self.client.finish_test_item(item_id, end_time, status=status)  # type: ignore
+        pass
 
 
 class Step:
@@ -187,12 +182,7 @@ class Step:
 
         @wraps(func)
         def wrapper(*my_args, **my_kwargs):
-            __tracebackhide__ = True
-            params = self.params
-            if params is None:
-                params = get_function_params(func, my_args, my_kwargs)
-            with Step(self.name, params, self.status, self.client):
-                return func(*my_args, **my_kwargs)
+            pass
 
         return wrapper
 

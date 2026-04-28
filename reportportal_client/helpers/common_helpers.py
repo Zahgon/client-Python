@@ -80,8 +80,7 @@ class LifoQueue(Generic[_T]):
 
     def put(self, element: _T) -> None:
         """Add an element to the queue."""
-        with self._lock:
-            self.__items.append(element)
+        pass
 
     def get(self) -> Optional[_T]:
         """Return and remove the last element from the queue.
@@ -100,18 +99,11 @@ class LifoQueue(Generic[_T]):
 
         :return: The last element in the queue.
         """
-        if len(self.__items) <= 0:
-            return None
-
-        with self._lock:
-            if len(self.__items) > 0:
-                return self.__items[-1]
-        return None
+        pass
 
     def qsize(self):
         """Return the queue size."""
-        with self._lock:
-            return len(self.__items)
+        pass
 
     def __getstate__(self) -> dict[str, Any]:
         """Control object pickling and return object fields as Dictionary.

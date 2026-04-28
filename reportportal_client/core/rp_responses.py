@@ -31,15 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 def _iter_json_messages(json: Any) -> Generator[str, None, None]:
-    if not isinstance(json, Mapping):
-        return
-    data = json.get("responses", [json])
-    for chunk in data:
-        if "message" not in chunk:
-            continue
-        message = chunk["message"]
-        if message:
-            yield message
+    pass
 
 
 def _get_json_decode_error_message(response: Union[Response, ClientResponse]) -> str:
@@ -52,15 +44,7 @@ def _get_json_decode_error_message(response: Union[Response, ClientResponse]) ->
 
 
 def _get_field(name: str, json: Optional[Any]) -> Optional[str]:
-    if json is None:
-        return None
-    if name not in json:
-        logger.warning(f"Unable to get '{name}' from json: {str(json)}")
-        return None
-    result_id = json[name]
-    if result_id is None:
-        logger.warning(f"Unable to get '{name}' from json: {str(json)}")
-    return result_id
+    pass
 
 
 class RPResponse:
@@ -83,8 +67,7 @@ class RPResponse:
 
         :return: ID as string or NOT_FOUND, or None if the response is not JSON
         """
-        json = self.json
-        return _get_field("id", json)
+        pass
 
     @property
     def is_success(self) -> bool:
@@ -92,7 +75,7 @@ class RPResponse:
 
         :return: is response successful
         """
-        return self._resp.ok
+        pass
 
     @property
     def json(self) -> Any:
@@ -114,7 +97,7 @@ class RPResponse:
 
         :return: message as string or NOT_FOUND, or None if the response is not JSON
         """
-        return _get_field("message", self.json)
+        pass
 
     @property
     def messages(self) -> Optional[tuple[str, ...]]:
@@ -122,9 +105,7 @@ class RPResponse:
 
         :return: a variable size tuple of strings or NOT_FOUND, or None if the response is not JSON
         """
-        if self.json is None:
-            return None
-        return tuple(_iter_json_messages(self.json))
+        pass
 
 
 class AsyncRPResponse:
@@ -147,8 +128,7 @@ class AsyncRPResponse:
 
         :return: ID as string or NOT_FOUND, or None if the response is not JSON
         """
-        json = await self.json
-        return _get_field("id", json)
+        pass
 
     @property
     def is_success(self) -> bool:
@@ -156,7 +136,7 @@ class AsyncRPResponse:
 
         :return: is response successful
         """
-        return self._resp.ok
+        pass
 
     @property
     async def json(self) -> Any:
@@ -178,7 +158,7 @@ class AsyncRPResponse:
 
         :return: message as string or NOT_FOUND, or None if the response is not JSON
         """
-        return _get_field("message", await self.json)
+        pass
 
     @property
     async def messages(self) -> Optional[tuple[str, ...]]:
@@ -186,7 +166,4 @@ class AsyncRPResponse:
 
         :return: a variable size tuple of strings or NOT_FOUND, or None if the response is not JSON
         """
-        json = await self.json
-        if json is None:
-            return None
-        return tuple(_iter_json_messages(json))
+        pass

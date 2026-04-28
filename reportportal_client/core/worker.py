@@ -43,14 +43,12 @@ class ControlCommand(Enum):
 
     def is_stop_cmd(self) -> bool:
         """Verify if the command is the stop one."""
-        return self in (ControlCommand.STOP, ControlCommand.STOP_IMMEDIATE)
+        pass
 
     @property
     def priority(self) -> Priority:
         """Get the priority of the command."""
-        if self is ControlCommand.STOP_IMMEDIATE:
-            return Priority(Priority.PRIORITY_IMMEDIATE)
-        return Priority(Priority.PRIORITY_LOW)
+        pass
 
     def __lt__(self, other: Union["ControlCommand", "HttpRequest"]) -> bool:
         """Priority protocol for the PriorityQueue."""
@@ -80,36 +78,18 @@ class APIWorker(object):
 
     def _command_get(self) -> Optional[ControlCommand]:
         """Get command from the queue."""
-        try:
-            cmd = self._queue.get(timeout=0.1)
-            return cmd
-        except queue.Empty:
-            return None
+        pass
 
     def _command_process(self, cmd: ControlCommand) -> None:
         """Process control command sent to the worker.
 
         :param cmd: a command to be processed
         """
-        logger.debug("[%s] Processing {%s} command", self.name, cmd)
-        if cmd == ControlCommand.REPORT_STATUS:
-            logger.debug("[%s] Current status for tasks is: {%s} unfinished", self.name, self._queue.unfinished_tasks)
-
-        if cmd.is_stop_cmd():
-            if cmd == ControlCommand.STOP_IMMEDIATE:
-                self._stop_immediately()
-            else:
-                self._stop()
+        pass
 
     def _request_process(self, request: Optional[HttpRequest]) -> None:
         """Send request to RP and update response attribute of the request."""
-        if not request:
-            return
-        logger.debug("[%s] Processing {%s} request", self.name, request)
-        try:
-            request.make()
-        except Exception as err:
-            logger.exception("[%s] Unknown exception has occurred. " "Skipping it.", err)
+        pass
 
     def _monitor(self) -> None:
         """Monitor worker queues and process them.
@@ -119,20 +99,7 @@ class APIWorker(object):
         the stop control command is sent, the worker will process all the
         items from the queue before terminate.
         """
-        while True:
-            cmd = self._command_get()
-            if not cmd:
-                continue  # No command received
-
-            if isinstance(cmd, ControlCommand):
-                logger.debug("[%s] Received {%s} command", self.name, cmd)
-                self._command_process(cmd)
-                if cmd and cmd.is_stop_cmd():
-                    logger.debug("[%s] Exiting due to {%s} command", self.name, cmd)
-                    break
-            else:
-                logger.debug("[%s] Received {%s} request", self.name, cmd)
-                self._request_process(cmd)
+        pass
 
     def _stop(self) -> None:
         """Routine that stops the worker thread(s).
@@ -140,12 +107,7 @@ class APIWorker(object):
         This method process everything in worker's queue first, ignoring
         commands and terminates thread only after.
         """
-        request = self._command_get()
-        while request is not None:
-            if not isinstance(request, ControlCommand):
-                self._request_process(request)
-            request = self._command_get()
-        self._stop_immediately()
+        pass
 
     def _stop_immediately(self) -> None:
         """Routine that stops the worker thread(s) immediately.
@@ -154,23 +116,18 @@ class APIWorker(object):
         Note that if you don't call this before your application exits, there
         may be some records still left on the queue, which won't be processed.
         """
-        self._stop_lock.acquire()
-        if self._thread is not None and self._thread.is_alive() and self._thread is not current_thread():
-            self._thread.join(timeout=THREAD_TIMEOUT)
-        self._thread = None
-        self._stop_lock.notify_all()
-        self._stop_lock.release()
+        pass
 
     def is_alive(self) -> bool:
         """Check whether the current worker is alive or not.
 
         :return: True is self._thread is not None, False otherwise
         """
-        return self._thread is not None and self._thread.is_alive()
+        pass
 
     def send(self, entity: Union[ControlCommand, HttpRequest]) -> None:
         """Send control command or a request to the worker queue."""
-        self._queue.put(entity)
+        pass
 
     def start(self) -> None:
         """Start the worker.
@@ -178,37 +135,21 @@ class APIWorker(object):
         This starts up a background thread to monitor the queue for
         requests to process.
         """
-        if self.is_alive():
-            # Already started
-            return
-        self._thread = Thread(target=self._monitor)
-        self._thread.daemon = True
-        self._thread.start()
+        pass
 
     def __perform_stop(self, stop_command: ControlCommand) -> None:
-        if not self.is_alive():
-            # Already stopped or already dead or not even started
-            return
-        with self._stop_lock:
-            if not self.is_alive():
-                # Already stopped by previous thread
-                return
-            self.send(stop_command)
-            # Do not release main thread until worker process all requests,
-            # since main thread might forcibly quit python interpreter as in
-            # pytest
-            self._stop_lock.wait(THREAD_TIMEOUT)
+        pass
 
     def stop(self) -> None:
         """Stop the worker.
 
         Send the appropriate control command to the worker.
         """
-        self.__perform_stop(ControlCommand.STOP)
+        pass
 
     def stop_immediate(self) -> None:
         """Stop the worker immediately.
 
         Send the appropriate control command to the worker.
         """
-        self.__perform_stop(ControlCommand.STOP_IMMEDIATE)
+        pass

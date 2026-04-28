@@ -150,25 +150,10 @@ class RPLogHandler(logging.Handler):
         :return:       False if the given record does no fit for sending
                        to RP, otherwise True.
         """
-        if not self.filter_client_logs:
-            return True
-        if record.name.startswith(self.ignored_record_names):
-            return False
-        if record.name.startswith("urllib3.connectionpool"):
-            # Filter the reportportal_client requests instance
-            # urllib3 usage
-            if self.endpoint:
-                hostname = urlparse(self.endpoint).hostname
-                if hostname:
-                    if hostname in self.format(record):
-                        return False
-        return True
+        pass
 
     def _get_rp_log_level(self, levelno: int) -> str:
-        return next(
-            (self._loglevel_map[level] for level in self._sorted_levelnos if levelno >= level),
-            self._loglevel_map[logging.NOTSET],
-        )
+        pass
 
     def emit(self, record: logging.LogRecord) -> None:
         """
@@ -176,30 +161,4 @@ class RPLogHandler(logging.Handler):
 
         :param record: a log Record of requests
         """
-        msg = ""
-
-        # noinspection PyBroadException
-        try:
-            msg = self.format(record)
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except Exception:
-            self.handleError(record)
-
-        log_level = self._get_rp_log_level(record.levelno)
-        rp_client = self.rp_client
-        if not rp_client:
-            rp_client = current()
-            if not rp_client:
-                rp_client = getattr(threading.current_thread(), "parent_rp_client", None)
-                if rp_client:
-                    set_current(rp_client)
-        if rp_client:
-            rp_client.log(
-                datetime.now(tz=timezone.utc),
-                msg,
-                level=log_level,
-                attachment=record.__dict__.get("attachment", None),
-                item_id=rp_client.current_item(),
-            )
-        return
+        pass

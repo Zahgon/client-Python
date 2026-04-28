@@ -84,7 +84,7 @@ class ClientSession:
 
     def put(self, url: Union[str, bytes], **kwargs: Any) -> Response:
         """Perform HTTP PUT request."""
-        return self.__request(self._client.put, url, **kwargs)
+        pass
 
     def mount(self, prefix: str, adapter: BaseAdapter) -> None:
         """Mount an adapter to a specific URL prefix.
@@ -92,7 +92,7 @@ class ClientSession:
         :param prefix: URL prefix (e.g., 'http://', 'https://')
         :param adapter: Adapter instance to mount
         """
-        self._client.mount(prefix, adapter)
+        pass
 
     def close(self) -> None:
         """Gracefully close internal requests.Session class instance."""

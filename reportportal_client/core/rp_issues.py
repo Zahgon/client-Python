@@ -77,18 +77,12 @@ class Issue:
 
     def external_issue_add(self, issue: "ExternalIssue") -> None:
         """Add external system issue to the issue."""
-        self._external_issues.append(issue.payload)
+        pass
 
     @property
     def payload(self) -> dict[str, Optional[Any]]:
         """Form the correct dictionary for the issue."""
-        return {
-            "autoAnalyzed": self.auto_analyzed,
-            "comment": self.comment,
-            "externalSystemIssues": self._external_issues,
-            "ignoreAnalyzer": self.ignore_analyzer,
-            "issueType": self.issue_type,
-        }
+        pass
 
 
 class ExternalIssue:
@@ -125,10 +119,4 @@ class ExternalIssue:
     @property
     def payload(self) -> dict[str, Optional[str]]:
         """Form the correct dictionary for the BTS issue."""
-        return {
-            "btsUrl": self.bts_url,
-            "btsProject": self.bts_project,
-            "submitDate": self.submit_date,
-            "ticketId": self.ticket_id,
-            "url": self.url,
-        }
+        pass

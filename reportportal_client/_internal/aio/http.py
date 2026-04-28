@@ -152,7 +152,7 @@ class RetryingClientSession:
 
     def put(self, url: str, *, data: Any = None, **kwargs: Any) -> Coroutine[Any, Any, ClientResponse]:
         """Perform HTTP PUT request."""
-        return self.__request(self._client.put, url, data=data, **kwargs)
+        pass
 
     def close(self) -> Coroutine[None, None, None]:
         """Gracefully close internal aiohttp.ClientSession class instance."""
@@ -233,7 +233,7 @@ class ClientSession:
 
     def put(self, url: str, *, data: Any = None, **kwargs: Any) -> Coroutine[Any, Any, ClientResponse]:
         """Perform HTTP PUT request."""
-        return self.__request(self._client.put, url, data=data, **kwargs)
+        pass
 
     def close(self) -> Coroutine:
         """Gracefully close internal session instance."""

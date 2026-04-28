@@ -99,7 +99,7 @@ class EmptyTask(Task[None]):
 
     @staticmethod
     async def __empty_coro() -> None:
-        return None
+        pass
 
     def __init__(self) -> None:
         """Initialize an EmptyTask.

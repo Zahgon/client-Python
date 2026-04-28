@@ -338,18 +338,10 @@ class Client:
             self._session = None
 
     async def __get_item_url(self, item_id_future: Union[Optional[str], Task[Optional[str]]]) -> Optional[str]:
-        item_id = await await_if_necessary(item_id_future)
-        if not item_id:
-            logger.warning("Attempt to make request for non-existent id.")
-            return None
-        return root_uri_join(self.base_url_v2, "item", item_id)
+        pass
 
     async def __get_launch_url(self, launch_uuid_future: Union[Optional[str], Task[Optional[str]]]) -> Optional[str]:
-        launch_uuid = await await_if_necessary(launch_uuid_future)
-        if not launch_uuid:
-            logger.warning("Attempt to make request for non-existent launch.")
-            return None
-        return root_uri_join(self.base_url_v2, "launch", launch_uuid, "finish")
+        pass
 
     async def start_launch(
         self,
@@ -373,35 +365,7 @@ class Client:
                             'rerun' option.
         :return:            Launch UUID if successfully started or None.
         """
-        url = root_uri_join(self.base_url_v2, "launch")
-        request_payload = LaunchStartRequest(
-            name=name,
-            start_time=start_time,
-            attributes=attributes,
-            truncate_attributes_enabled=self.truncate_attributes,
-            truncate_fields_enabled=self.truncate_fields,
-            replace_binary_characters=self.replace_binary_chars,
-            description=description,
-            mode=self.mode,
-            rerun=rerun,
-            rerun_of=rerun_of,
-        ).payload
-
-        response = await AsyncHttpRequest(
-            (await self.session()).post, url=url, json=request_payload, name="start_launch"
-        ).make()
-        if not response:
-            return None
-
-        if not self._skip_analytics:
-            stat_coro = async_send_event("start_launch", *agent_name_version(attributes))
-            self.__stat_task = asyncio.create_task(stat_coro)
-
-        launch_uuid = await response.id
-        logger.debug(f"start_launch - ID: {launch_uuid}")
-        if self.launch_uuid_print and self.print_output:
-            print(f"ReportPortal Launch UUID: {launch_uuid}", file=self.print_output.get_output())
-        return launch_uuid
+        pass
 
     async def start_test_item(
         self,
@@ -444,40 +408,7 @@ class Client:
         :param uuid:           Test Item UUID to use on start (overrides server one, should be globally unique).
         :return:               Test Item UUID if successfully started or None.
         """
-        if parent_item_id:
-            url = self.__get_item_url(parent_item_id)
-        else:
-            url = root_uri_join(self.base_url_v2, "item")
-        request_payload = AsyncItemStartRequest(
-            name=name,
-            start_time=start_time,
-            type_=item_type,
-            launch_uuid=launch_uuid,
-            attributes=attributes,
-            truncate_attributes_enabled=self.truncate_attributes,
-            truncate_fields_enabled=self.truncate_fields,
-            replace_binary_characters=self.replace_binary_chars,
-            code_ref=code_ref,
-            description=description,
-            has_stats=has_stats,
-            parameters=parameters,
-            retry=retry,
-            test_case_id=test_case_id,
-            retry_of=retry_of,
-            uuid=uuid,
-        ).payload
-
-        response = await AsyncHttpRequest(
-            (await self.session()).post, url=url, json=request_payload, name="start_test_item"
-        ).make()
-        if not response:
-            return None
-        item_id = await response.id
-        if not item_id:
-            logger.warning("start_test_item - invalid response: %s", str(await response.json))
-        else:
-            logger.debug("start_test_item - ID: %s", item_id)
-        return item_id
+        pass
 
     async def finish_test_item(
         self,
@@ -511,31 +442,7 @@ class Client:
                              with the 'retry' parameter.
         :return:             Response message.
         """
-        url = self.__get_item_url(item_id)
-        request_payload = AsyncItemFinishRequest(
-            end_time=end_time,
-            launch_uuid=launch_uuid,
-            status=status,
-            attributes=attributes,
-            truncate_attributes_enabled=self.truncate_attributes,
-            truncate_fields_enabled=self.truncate_fields,
-            replace_binary_characters=self.replace_binary_chars,
-            description=description,
-            test_case_id=test_case_id,
-            is_skipped_an_issue=self.is_skipped_an_issue,
-            issue=issue,
-            retry=retry,
-            retry_of=retry_of,
-        ).payload
-        response = await AsyncHttpRequest(
-            (await self.session()).put, url=url, json=request_payload, name="finish_test_item"
-        ).make()
-        if not response:
-            return None
-        message = await response.message
-        logger.debug("finish_test_item - ID: %s", await await_if_necessary(item_id))
-        logger.debug("response message: %s", message)
-        return message
+        pass
 
     async def finish_launch(
         self,
@@ -555,23 +462,7 @@ class Client:
         :param attributes:  Launch attributes. These attributes override attributes on Start Launch call.
         :return:            Response message or None.
         """
-        url = self.__get_launch_url(launch_uuid)
-        request_payload = LaunchFinishRequest(
-            end_time=end_time,
-            status=status,
-            attributes=attributes,
-            truncate_attributes_enabled=self.truncate_attributes,
-            truncate_fields_enabled=self.truncate_fields,
-            replace_binary_characters=self.replace_binary_chars,
-            description=kwargs.get("description"),
-        ).payload
-        response = await AsyncHttpRequest(
-            (await self.session()).put, url=url, json=request_payload, name="finish_launch"
-        ).make()
-        if not response:
-            return None
-        logger.debug("finish_launch - ID: %s", await await_if_necessary(launch_uuid))
-        return None
+        pass
 
     async def update_test_item(
         self,
@@ -587,30 +478,10 @@ class Client:
         :param description: Test Item description.
         :return:            Response message or None.
         """
-        data = ItemUpdateRequest(
-            description=description,
-            attributes=attributes,
-            truncate_attributes_enabled=self.truncate_attributes,
-            truncate_fields_enabled=self.truncate_fields,
-            replace_binary_characters=self.replace_binary_chars,
-        ).payload
-        item_id = await self.get_item_id_by_uuid(item_uuid)
-        url = root_uri_join(self.base_url_v1, "item", item_id, "update")
-        response = await AsyncHttpRequest(
-            (await self.session()).put, url=url, json=data, name="update_test_item"
-        ).make()
-        if not response:
-            return None
-        logger.debug("update_test_item - Item: %s", item_id)
-        return await response.message
+        pass
 
     async def __get_launch_uuid_url(self, launch_uuid_future: Union[str, Task[str]]) -> Optional[str]:
-        launch_uuid = await await_if_necessary(launch_uuid_future)
-        if not launch_uuid:
-            logger.warning("Attempt to make request for non-existent Launch UUID.")
-            return None
-        logger.debug("get_launch_info - ID: %s", launch_uuid)
-        return root_uri_join(self.base_url_v1, "launch", "uuid", launch_uuid)
+        pass
 
     async def get_launch_info(self, launch_uuid_future: Union[str, Task[str]]) -> Optional[dict]:
         """Get Launch information by Launch UUID.
@@ -618,24 +489,10 @@ class Client:
         :param launch_uuid_future: Str or Task UUID returned on the Launch start.
         :return:                   Launch information in dictionary.
         """
-        url = self.__get_launch_uuid_url(launch_uuid_future)
-        response = await AsyncHttpRequest((await self.session()).get, url=url, name="get_launch_info").make()
-        if not response:
-            return None
-        launch_info = None
-        if response.is_success:
-            launch_info = await response.json
-            logger.debug("get_launch_info - Launch info: %s", launch_info)
-        else:
-            logger.warning("get_launch_info - Launch info: Failed to fetch launch ID from the API.")
-        return launch_info
+        pass
 
     async def __get_item_uuid_url(self, item_uuid_future: Union[Optional[str], Task[Optional[str]]]) -> Optional[str]:
-        item_uuid = await await_if_necessary(item_uuid_future)
-        if not item_uuid:
-            logger.warning("Attempt to make request for non-existent UUID.")
-            return None
-        return root_uri_join(self.base_url_v1, "item", "uuid", item_uuid)
+        pass
 
     async def get_item_id_by_uuid(self, item_uuid_future: Union[str, Task[str]]) -> Optional[str]:
         """Get Test Item ID by the given Item UUID.
@@ -643,9 +500,7 @@ class Client:
         :param item_uuid_future: Str or Task UUID returned on the Item start.
         :return:                 Test Item ID.
         """
-        url = self.__get_item_uuid_url(item_uuid_future)
-        response = await AsyncHttpRequest((await self.session()).get, url=url, name="get_item_id").make()
-        return await response.id if response else None
+        pass
 
     async def get_launch_ui_id(self, launch_uuid_future: Union[str, Task[str]]) -> Optional[int]:
         """Get Launch ID of the given Launch.
@@ -653,8 +508,7 @@ class Client:
         :param launch_uuid_future: Str or Task UUID returned on the Launch start.
         :return:                   Launch ID of the Launch. None if not found.
         """
-        launch_info = await self.get_launch_info(launch_uuid_future)
-        return launch_info.get("id") if launch_info else None
+        pass
 
     async def get_launch_ui_url(self, launch_uuid_future: Union[str, Task[str]]) -> Optional[str]:
         """Get full quality URL of the given Launch.
@@ -662,39 +516,21 @@ class Client:
         :param launch_uuid_future: Str or Task UUID returned on the Launch start.
         :return:                   Launch URL string.
         """
-        launch_uuid = await await_if_necessary(launch_uuid_future)
-        launch_info = await self.get_launch_info(launch_uuid)
-        launch_id = launch_info.get("id") if launch_info else None
-        if not launch_id:
-            return None
-        mode = launch_info.get("mode") if launch_info else None
-        if not mode:
-            mode = self.mode
-
-        launch_type = "launches" if mode.upper() == "DEFAULT" else "userdebug"
-
-        path = f"ui/#{self.project.lower()}/{launch_type}/all/{launch_id}"
-        url = uri_join(self.endpoint, path)
-        logger.debug("get_launch_ui_url - ID: %s", launch_uuid)
-        return url
+        pass
 
     async def get_project_settings(self) -> Optional[dict]:
         """Get settings of the current Project.
 
         :return: Settings response in Dictionary.
         """
-        url = root_uri_join(self.base_url_v1, "settings")
-        response = await AsyncHttpRequest((await self.session()).get, url=url, name="get_project_settings").make()
-        return await response.json if response else None
+        pass
 
     async def get_api_info(self) -> Optional[dict]:
         """Get server information, like version.
 
         :return: server information.
         """
-        url = root_uri_join("api/info")
-        response = await AsyncHttpRequest((await self.session()).get, url=url, name="get_api_info").make()
-        return await response.json if response else None
+        pass
 
     async def log_batch(self, log_batch: Optional[list[AsyncRPRequestLog]]) -> Optional[tuple[str, ...]]:
         """Send batch logging message to the ReportPortal.
@@ -725,34 +561,7 @@ class Client:
         :return: Cloned client object
         :rtype: Client
         """
-        cloned = Client(
-            endpoint=self.endpoint,
-            project=self.project,
-            api_key=self.api_key,
-            is_skipped_an_issue=self.is_skipped_an_issue,
-            verify_ssl=self.verify_ssl,
-            retries=self.retries,
-            max_pool_size=self.max_pool_size,
-            http_timeout=self.http_timeout,
-            keepalive_timeout=self.keepalive_timeout,
-            mode=self.mode,
-            launch_uuid_print=self.launch_uuid_print,
-            print_output=self.print_output,
-            truncate_fields=self.truncate_fields,
-            truncate_attributes=self.truncate_attributes,
-            replace_binary_chars=self.replace_binary_chars,
-            launch_name_length_limit=self.launch_name_length_limit,
-            item_name_length_limit=self.item_name_length_limit,
-            launch_description_length_limit=self.launch_description_length_limit,
-            item_description_length_limit=self.item_description_length_limit,
-            oauth_uri=self.oauth_uri,
-            oauth_username=self.oauth_username,
-            oauth_password=self.oauth_password,
-            oauth_client_id=self.oauth_client_id,
-            oauth_client_secret=self.oauth_client_secret,
-            oauth_scope=self.oauth_scope,
-        )
-        return cloned
+        pass
 
     def __getstate__(self) -> dict[str, Any]:
         """Control object pickling and return object fields as Dictionary.
@@ -799,7 +608,7 @@ class AsyncRPClient(RP):
 
         :return: Client instance.
         """
-        return self.__client
+        pass
 
     @property
     def launch_uuid(self) -> Optional[str]:
@@ -807,7 +616,7 @@ class AsyncRPClient(RP):
 
         :return: UUID string.
         """
-        return self.__launch_uuid
+        pass
 
     @property
     def endpoint(self) -> str:
@@ -815,7 +624,7 @@ class AsyncRPClient(RP):
 
         :return: base URL string.
         """
-        return self.__endpoint
+        pass
 
     @property
     def project(self) -> str:
@@ -823,7 +632,7 @@ class AsyncRPClient(RP):
 
         :return: Project name string.
         """
-        return self.__project
+        pass
 
     @property
     def step_reporter(self) -> StepReporter:
@@ -831,7 +640,7 @@ class AsyncRPClient(RP):
 
         :return: StepReporter to report steps.
         """
-        return self.__step_reporter
+        pass
 
     def __init__(
         self,
@@ -901,28 +710,13 @@ class AsyncRPClient(RP):
         set_current(self)
 
     def __cache_api_info(self, api_info: Optional[dict]) -> Optional[dict]:
-        if not isinstance(api_info, dict):
-            return None
-        self._api_info_cache = api_info
-        version = extract_server_version(api_info)
-        self._use_microseconds = bool(version and compare_semantic_versions(version, MICROSECONDS_MIN_VERSION) >= 0)
-        return api_info
+        pass
 
     async def __prefetch_api_info(self) -> Optional[dict]:
-        try:
-            api_info = await self.__client.get_api_info()
-            return self.__cache_api_info(api_info)
-        except Exception as exc:
-            logger.warning("Unable to prefetch API info in background: %s", exc)
-            return None
+        pass
 
     def __init_api_info_prefetch(self) -> None:
-        try:
-            loop = asyncio.get_running_loop()
-            self._api_info_task = loop.create_task(self.__prefetch_api_info())
-        except RuntimeError:
-            # Construction may happen without an active loop.
-            self._api_info_task = None
+        pass
 
     async def start_launch(
         self,
@@ -945,19 +739,7 @@ class AsyncRPClient(RP):
                             'rerun' option.
         :return:            Launch UUID if successfully started or None.
         """
-        if not self.use_own_launch:
-            return self.launch_uuid
-        launch_uuid = await self.__client.start_launch(
-            name,
-            await self._convert_time(start_time),
-            description=description,
-            attributes=attributes,
-            rerun=rerun,
-            rerun_of=rerun_of,
-            **kwargs,
-        )
-        self.__launch_uuid = launch_uuid
-        return self.launch_uuid
+        pass
 
     async def start_test_item(
         self,
@@ -997,28 +779,7 @@ class AsyncRPClient(RP):
         :param uuid:           Test Item UUID to use on start (overrides server one, should be globally unique).
         :return:               Test Item UUID if successfully started or None.
         """
-        item_id = await self.__client.start_test_item(
-            self.__launch_uuid,
-            name,
-            await self._convert_time(start_time),
-            item_type,
-            description=description,
-            attributes=attributes,
-            parameters=parameters,
-            parent_item_id=parent_item_id,
-            has_stats=has_stats,
-            code_ref=code_ref,
-            retry=retry,
-            test_case_id=test_case_id,
-            retry_of=retry_of,
-            uuid=uuid,
-            **kwargs,
-        )
-        if not item_id:
-            return None
-        logger.debug("start_test_item - ID: %s", item_id)
-        self._add_current_item(item_id)
-        return item_id
+        pass
 
     async def finish_test_item(
         self,
@@ -1049,21 +810,7 @@ class AsyncRPClient(RP):
                              with the 'retry' parameter.
         :return:             Response message.
         """
-        result = await self.__client.finish_test_item(
-            self.__launch_uuid,
-            item_id,
-            await self._convert_time(end_time),
-            status=status,
-            issue=issue,
-            attributes=attributes,
-            description=description,
-            retry=retry,
-            test_case_id=test_case_id,
-            retry_of=retry_of,
-            **kwargs,
-        )
-        self._remove_current_item()
-        return result
+        pass
 
     async def finish_launch(
         self,
@@ -1080,14 +827,7 @@ class AsyncRPClient(RP):
         :param attributes: Launch attributes. These attributes override attributes on Start Launch call.
         :return:           Response message or None.
         """
-        if self.use_own_launch:
-            result = await self.__client.finish_launch(
-                self.__launch_uuid, await self._convert_time(end_time), status=status, attributes=attributes, **kwargs
-            )
-        else:
-            result = ""
-        await self.__client.log_batch(self._log_batcher.flush())
-        return result
+        pass
 
     async def update_test_item(
         self, item_uuid: str, attributes: Optional[Union[list, dict]] = None, description: Optional[str] = None
@@ -1099,31 +839,29 @@ class AsyncRPClient(RP):
         :param description: Test Item description.
         :return:            Response message or None.
         """
-        return await self.__client.update_test_item(item_uuid, attributes=attributes, description=description)
+        pass
 
     def _add_current_item(self, item: str) -> None:
         """Add the last item from the self._items queue."""
-        self._item_stack.put(item)
+        pass
 
     def _remove_current_item(self) -> Optional[str]:
         """Remove the last item from the self._items queue."""
-        return self._item_stack.get()
+        pass
 
     def current_item(self) -> Optional[str]:
         """Retrieve the last Item reported by the client (based on the internal FILO queue).
 
         :return: Item UUID string.
         """
-        return self._item_stack.last()
+        pass
 
     async def get_launch_info(self) -> Optional[dict]:
         """Get current Launch information.
 
         :return: Launch information in dictionary.
         """
-        if not self.launch_uuid:
-            return {}
-        return await self.__client.get_launch_info(self.__launch_uuid)
+        pass
 
     async def get_item_id_by_uuid(self, item_uuid: str) -> Optional[str]:
         """Get Test Item ID by the given Item UUID.
@@ -1131,61 +869,42 @@ class AsyncRPClient(RP):
         :param item_uuid: String UUID returned on the Item start.
         :return:          Test Item ID.
         """
-        return await self.__client.get_item_id_by_uuid(item_uuid)
+        pass
 
     async def get_launch_ui_id(self) -> Optional[int]:
         """Get Launch ID of the current Launch.
 
         :return: Launch ID of the Launch. None if not found.
         """
-        if not self.launch_uuid:
-            return None
-        return await self.__client.get_launch_ui_id(self.__launch_uuid)
+        pass
 
     async def get_launch_ui_url(self) -> Optional[str]:
         """Get full quality URL of the current Launch.
 
         :return: Launch URL string.
         """
-        if not self.launch_uuid:
-            return None
-        return await self.__client.get_launch_ui_url(self.__launch_uuid)
+        pass
 
     async def get_project_settings(self) -> Optional[dict]:
         """Get settings of the current Project.
 
         :return: Settings response in Dictionary.
         """
-        return await self.__client.get_project_settings()
+        pass
 
     async def get_api_info(self) -> Optional[dict]:
         """Get server information, like version.
 
         :return: server information.
         """
-        if self._api_info_cache is not None:
-            return self.__cache_api_info(self._api_info_cache)
-        if self._api_info_task:
-            return await self._api_info_task
-        api_info = await self.__client.get_api_info()
-        return self.__cache_api_info(api_info)
+        pass
 
     async def use_microseconds(self) -> Optional[bool]:
         """Return if current server version supports microseconds."""
-        if self._use_microseconds is not None:
-            return self._use_microseconds
-
-        await self.get_api_info()
-        if self._use_microseconds is None:
-            self._use_microseconds = False
-        return self._use_microseconds
+        pass
 
     async def _convert_time(self, time_value: Union[str, datetime]) -> str:
-        if isinstance(time_value, str):
-            return time_value
-        if await self.use_microseconds():
-            return time_value.strftime("%Y-%m-%dT%H:%M:%S.%f%z")
-        return str(int(time_value.timestamp() * 1000))
+        pass
 
     async def log(
         self,
@@ -1207,20 +926,7 @@ class AsyncRPClient(RP):
         :param item_id:    UUID of the ReportPortal Item the message belongs to.
         :return:           Response message Tuple if Log message batch was sent or None.
         """
-        rp_level = str(level) if level else DEFAULT_LOG_LEVEL
-        rp_file = RPFile(**attachment) if attachment else None
-        rp_log = AsyncRPRequestLog(
-            truncate_attributes_enabled=None,
-            truncate_fields_enabled=None,
-            replace_binary_characters=None,
-            launch_uuid=self.__launch_uuid,
-            time=await self._convert_time(time),
-            file=rp_file,
-            item_uuid=item_id,
-            level=rp_level,
-            message=message,
-        )
-        return await self.__client.log_batch(await self._log_batcher.append_async(rp_log))
+        pass
 
     def clone(self) -> "AsyncRPClient":
         """Clone the Client object, set current Item ID as cloned Item ID.
@@ -1228,21 +934,7 @@ class AsyncRPClient(RP):
         :return: Cloned client object
         :rtype: AsyncRPClient.
         """
-        cloned_client = self.__client.clone()
-        # noinspection PyTypeChecker
-        cloned = AsyncRPClient(
-            endpoint=self.endpoint,
-            project=self.project,
-            client=cloned_client,
-            launch_uuid=self.__launch_uuid,
-            log_batch_size=self.log_batch_size,
-            log_batch_payload_limit=self.log_batch_payload_limit,
-            log_batcher=self._log_batcher,
-        )
-        current_item = self.current_item()
-        if current_item:
-            cloned._add_current_item(current_item)
-        return cloned
+        pass
 
     async def close(self) -> None:
         """Close current client connections."""
@@ -1277,7 +969,7 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
 
         :return: Client instance.
         """
-        return self.__client
+        pass
 
     @property
     def launch_uuid(self) -> Optional[Task[Optional[str]]]:
@@ -1285,7 +977,7 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
 
         :return: UUID string.
         """
-        return self.__launch_uuid
+        pass
 
     @property
     def endpoint(self) -> str:
@@ -1293,7 +985,7 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
 
         :return: base URL string.
         """
-        return self.__endpoint
+        pass
 
     @property
     def project(self) -> str:
@@ -1301,7 +993,7 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
 
         :return: Project name string.
         """
-        return self.__project
+        pass
 
     @property
     def step_reporter(self) -> StepReporter:
@@ -1309,7 +1001,7 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
 
         :return: StepReporter to report steps.
         """
-        return self.__step_reporter
+        pass
 
     def __init__(
         self,
@@ -1397,73 +1089,42 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
 
         :param item: Future Task of the Item UUID.
         """
-        self._item_stack.put(item)
+        pass
 
     def _remove_current_item(self) -> Task[_T]:
         """Remove the last Item from the internal FILO queue.
 
         :return: Future Task of the Item UUID.
         """
-        return self._item_stack.get()
+        pass
 
     def current_item(self) -> Task[_T]:
         """Retrieve the last Item reported by the client (based on the internal FILO queue).
 
         :return: Future Task of the Item UUID.
         """
-        return self._item_stack.last()
+        pass
 
     async def __empty_str(self) -> str:
-        return ""
+        pass
 
     async def __empty_dict(self) -> dict:
-        return {}
+        pass
 
     async def __int_value(self) -> int:
-        return -1
+        pass
 
     async def _return_value(self, value: _T) -> _T:
-        return value
+        pass
 
     async def _prefetch_api_info(self) -> Optional[dict]:
-        try:
-            api_info = await self.__client.get_api_info()
-            self.__cache_api_info(api_info)
-            return api_info
-        except Exception as exc:
-            logger.warning("Unable to prefetch API info in background: %s", exc)
-            return None
+        pass
 
     def __cache_api_info(self, api_info: Optional[dict]) -> None:
-        if not isinstance(api_info, dict):
-            return
-        self._api_info_cache = api_info
-        version = extract_server_version(api_info)
-        self._use_microseconds = bool(version and compare_semantic_versions(version, MICROSECONDS_MIN_VERSION) >= 0)
+        pass
 
     async def __resolve_use_microseconds(self) -> bool:
-        if self._use_microseconds is not None:
-            return self._use_microseconds
-
-        if self._api_info_task:
-            try:
-                api_info = await self._api_info_task
-                self.__cache_api_info(api_info)
-            except Exception as exc:
-                logger.warning("Unable to await API info prefetch: %s", exc)
-
-        if self._use_microseconds is not None:
-            return self._use_microseconds or False
-
-        if self._api_info_cache is None:
-            try:
-                self.__cache_api_info(await self.__client.get_api_info())
-            except Exception as exc:
-                logger.warning("Unable to fetch API info for microseconds check: %s", exc)
-
-        if self._use_microseconds is None:
-            self._use_microseconds = False
-        return self._use_microseconds or False
+        pass
 
     def start_launch(
         self,
@@ -1486,19 +1147,7 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
                             'rerun' option.
         :return:            Launch UUID if successfully started or None.
         """
-        if not self.own_launch:
-            return self.launch_uuid
-        launch_uuid_coro = self.__client.start_launch(
-            name,
-            self._convert_time(start_time),
-            description=description,
-            attributes=attributes,
-            rerun=rerun,
-            rerun_of=rerun_of,
-            **kwargs,
-        )
-        self.__launch_uuid = self.create_task(launch_uuid_coro)
-        return self.launch_uuid
+        pass
 
     def start_test_item(
         self,
@@ -1538,26 +1187,7 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
         :param uuid:           Test Item UUID to use on start (overrides server one, should be globally unique).
         :return:               Test Item UUID if successfully started or None.
         """
-        item_id_coro = self.__client.start_test_item(
-            self.launch_uuid,
-            name,
-            self._convert_time(start_time),
-            item_type,
-            description=description,
-            attributes=attributes,
-            parameters=parameters,
-            parent_item_id=parent_item_id,
-            has_stats=has_stats,
-            code_ref=code_ref,
-            retry=retry,
-            test_case_id=test_case_id,
-            retry_of=retry_of,
-            uuid=uuid,
-            **kwargs,
-        )
-        item_id_task = self.create_task(item_id_coro)
-        self._add_current_item(item_id_task)
-        return item_id_task
+        pass
 
     def finish_test_item(
         self,
@@ -1588,22 +1218,7 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
                              with the 'retry' parameter.
         :return:             Response message.
         """
-        result_coro = self.__client.finish_test_item(
-            self.launch_uuid,
-            item_id,
-            self._convert_time(end_time),
-            status=status,
-            issue=issue,
-            attributes=attributes,
-            description=description,
-            retry=retry,
-            test_case_id=test_case_id,
-            retry_of=retry_of,
-            **kwargs,
-        )
-        result_task = self.create_task(result_coro)
-        self._remove_current_item()
-        return result_task
+        pass
 
     def finish_launch(
         self,
@@ -1620,17 +1235,7 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
         :param attributes: Launch attributes. These attributes override attributes on Start Launch call.
         :return:           Response message or None.
         """
-        self.create_task(self.__client.log_batch(self._log_batcher.flush()))
-        if self.own_launch:
-            result_coro = self.__client.finish_launch(
-                self.launch_uuid, self._convert_time(end_time), status=status, attributes=attributes, **kwargs
-            )
-        else:
-            result_coro = self.__empty_str()
-
-        result_task = self.create_task(result_coro)
-        self.finish_tasks()
-        return result_task
+        pass
 
     def update_test_item(
         self, item_uuid: Task[str], attributes: Optional[Union[list, dict]] = None, description: Optional[str] = None
@@ -1642,20 +1247,14 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
         :param description: Test Item description.
         :return:            Response message or None.
         """
-        result_coro = self.__client.update_test_item(item_uuid, attributes=attributes, description=description)
-        result_task = self.create_task(result_coro)
-        return result_task
+        pass
 
     def get_launch_info(self) -> Task[Optional[dict]]:
         """Get current Launch information.
 
         :return: Launch information in dictionary.
         """
-        if not self.launch_uuid:
-            return self.create_task(self.__empty_dict())
-        result_coro = self.__client.get_launch_info(self.launch_uuid)
-        result_task = self.create_task(result_coro)
-        return result_task
+        pass
 
     def get_item_id_by_uuid(self, item_uuid_future: Task[Optional[str]]) -> Task[Optional[str]]:
         """Get Test Item ID by the given Item UUID.
@@ -1663,66 +1262,42 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
         :param item_uuid_future: Str or Task UUID returned on the Item start.
         :return:                 Test Item ID.
         """
-        result_coro = self.__client.get_item_id_by_uuid(item_uuid_future)
-        result_task = self.create_task(result_coro)
-        return result_task
+        pass
 
     def get_launch_ui_id(self) -> Task[Optional[int]]:
         """Get Launch ID of the current Launch.
 
         :return: Launch ID of the Launch. None if not found.
         """
-        if not self.launch_uuid:
-            return self.create_task(self.__int_value())
-        result_coro = self.__client.get_launch_ui_id(self.launch_uuid)
-        result_task = self.create_task(result_coro)
-        return result_task
+        pass
 
     def get_launch_ui_url(self) -> Task[Optional[str]]:
         """Get full quality URL of the current Launch.
 
         :return: Launch URL string.
         """
-        if not self.launch_uuid:
-            return self.create_task(self.__empty_str())
-        result_coro = self.__client.get_launch_ui_url(self.launch_uuid)
-        result_task = self.create_task(result_coro)
-        return result_task
+        pass
 
     def get_project_settings(self) -> Task[Optional[dict]]:
         """Get settings of the current Project.
 
         :return: Settings response in Dictionary.
         """
-        result_coro = self.__client.get_project_settings()
-        result_task = self.create_task(result_coro)
-        return result_task
+        pass
 
     def get_api_info(self) -> Task[Optional[dict]]:
         """Get server information, like version.
 
         :return: server information.
         """
-        if self._api_info_cache is not None:
-            return self.create_task(self._return_value(self._api_info_cache))
-        if self._api_info_task:
-            return self._api_info_task
-        api_task = self.create_task(self._prefetch_api_info())
-        self._api_info_task = api_task
-        return api_task
+        pass
 
     def use_microseconds(self) -> Task[bool]:
         """Return if current server version supports microseconds."""
-        if self._use_microseconds is not None:
-            return self.create_task(self._return_value(self._use_microseconds))
-        return self.create_task(self.__resolve_use_microseconds())
+        pass
 
     def _convert_time(self, time_value: Union[str, datetime]) -> str:
-        if isinstance(time_value, str):
-            return time_value
-        if self.use_microseconds().blocking_result():
-            return time_value.strftime("%Y-%m-%dT%H:%M:%S.%f%z")
-        return str(int(time_value.timestamp() * 1000))
+        pass
 
     async def _log_batch(self, log_rq: Optional[list[AsyncRPRequestLog]]) -> Optional[tuple[str, ...]]:
         return await self.__client.log_batch(log_rq)
@@ -1750,20 +1325,7 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
         :param item_id:    UUID of the ReportPortal Item the message belongs to.
         :return:           Response message Tuple if Log message batch was sent or None.
         """
-        rp_level = str(level) if level else DEFAULT_LOG_LEVEL
-        rp_file = RPFile(**attachment) if attachment else None
-        rp_log = AsyncRPRequestLog(
-            truncate_attributes_enabled=None,
-            truncate_fields_enabled=None,
-            replace_binary_characters=None,
-            launch_uuid=self.launch_uuid,
-            time=self._convert_time(time),
-            file=rp_file,
-            item_uuid=item_id,
-            level=rp_level,
-            message=message,
-        )
-        return self.create_task(self._log(rp_log))
+        pass
 
     def close(self) -> None:
         """Close current client connections."""
@@ -1774,7 +1336,7 @@ class _RPClient(RP, metaclass=AbstractBaseClass):
 
 def heartbeat(self):
     """Heartbeat function to keep the loop running."""
-    self._loop.call_at(self._loop.time() + 0.1, heartbeat, self)
+    pass
 
 
 class ThreadedRPClient(_RPClient):
@@ -1795,33 +1357,15 @@ class ThreadedRPClient(_RPClient):
     def __init_task_list(
         self, task_list: Optional[BackgroundTaskList[Task[_T]]] = None, task_mutex: Optional[threading.RLock] = None
     ):
-        if task_list:
-            if not task_mutex:
-                warnings.warn(
-                    '"task_list" argument is set, but not "task_mutex". This usually indicates '
-                    'invalid use, since "task_mutex" is used to synchronize on "task_list".',
-                    RuntimeWarning,
-                    3,
-                )
-        self._task_list = task_list or BackgroundTaskList()
-        self._task_mutex = task_mutex or threading.RLock()
+        pass
 
     def __heartbeat(self):
         #  We operate on our own loop with daemon thread, so we will exit in any way when main thread exit,
         #  so we can iterate forever
-        heartbeat(self)
+        pass
 
     def __init_loop(self, loop: Optional[asyncio.AbstractEventLoop] = None):
-        self._thread = None
-        if loop:
-            self._loop = loop
-        else:
-            self._loop = asyncio.new_event_loop()
-            self._loop.set_task_factory(ThreadedTaskFactory(self.task_timeout))
-            self.__heartbeat()
-            thread = threading.Thread(target=self._loop.run_forever, name="RP-Async-Client", daemon=True)
-            thread.start()
-            self._thread = thread
+        pass
 
     def __init__(
         self,
@@ -1894,11 +1438,7 @@ class ThreadedRPClient(_RPClient):
         self.__init_api_info_prefetch()
 
     def __init_api_info_prefetch(self) -> None:
-        if self._use_microseconds is not None or self._api_info_cache is not None:
-            return
-        if self._loop is None:
-            return
-        self._api_info_task = self._loop.create_task(self._prefetch_api_info())
+        pass
 
     def create_task(self, coro: Coroutine[Any, Any, _T]) -> Task[_T]:
         """Create a Task from given Coroutine.
@@ -1935,25 +1475,7 @@ class ThreadedRPClient(_RPClient):
         :return: Cloned client object.
         :rtype: ThreadedRPClient
         """
-        # noinspection PyTypeChecker
-        cloned = ThreadedRPClient(
-            endpoint=self.endpoint,
-            project=self.project,
-            launch_uuid=self.launch_uuid,
-            client=self.client,
-            log_batch_size=self.log_batch_size,
-            log_batch_payload_limit=self.log_batch_payload_limit,
-            log_batcher=self._log_batcher,
-            task_timeout=self.task_timeout,
-            shutdown_timeout=self.shutdown_timeout,
-            task_mutex=self._task_mutex,
-            task_list=self._task_list,
-            loop=self._loop,
-        )
-        current_item = self.current_item()
-        if current_item:
-            cloned._add_current_item(current_item)
-        return cloned
+        pass
 
     def __getstate__(self) -> dict[str, Any]:
         """Control object pickling and return object fields as Dictionary.
@@ -2001,23 +1523,10 @@ class BatchedRPClient(_RPClient):
     def __init_task_list(
         self, task_list: Optional[TriggerTaskBatcher[Task[_T]]] = None, task_mutex: Optional[threading.RLock] = None
     ):
-        if task_list:
-            if not task_mutex:
-                warnings.warn(
-                    '"task_list" argument is set, but not "task_mutex". This usually indicates '
-                    'invalid use, since "task_mutex" is used to synchronize on "task_list".',
-                    RuntimeWarning,
-                    3,
-                )
-        self._task_list = task_list or TriggerTaskBatcher(self.trigger_num, self.trigger_interval)
-        self._task_mutex = task_mutex or threading.RLock()
+        pass
 
     def __init_loop(self, loop: Optional[asyncio.AbstractEventLoop] = None):
-        if loop:
-            self._loop = loop
-        else:
-            self._loop = asyncio.new_event_loop()
-            self._loop.set_task_factory(BatchedTaskFactory())
+        pass
 
     def __init__(
         self,
@@ -2098,7 +1607,7 @@ class BatchedRPClient(_RPClient):
 
     def __init_api_info_prefetch(self) -> None:
         # Batched client loop runs on demand, so prefetch starts lazily.
-        self._api_info_task = None
+        pass
 
     def create_task(self, coro: Coroutine[Any, Any, _T]) -> Task[_T]:
         """Create a Task from given Coroutine.
@@ -2132,27 +1641,7 @@ class BatchedRPClient(_RPClient):
         :return: Cloned client object.
         :rtype: BatchedRPClient
         """
-        # noinspection PyTypeChecker
-        cloned = BatchedRPClient(
-            endpoint=self.endpoint,
-            project=self.project,
-            launch_uuid=self.launch_uuid,
-            client=self.client,
-            log_batch_size=self.log_batch_size,
-            log_batch_payload_limit=self.log_batch_payload_limit,
-            log_batcher=self._log_batcher,
-            task_timeout=self.task_timeout,
-            shutdown_timeout=self.shutdown_timeout,
-            task_list=self._task_list,
-            task_mutex=self._task_mutex,
-            loop=self._loop,
-            trigger_num=self.trigger_num,
-            trigger_interval=self.trigger_interval,
-        )
-        current_item = self.current_item()
-        if current_item:
-            cloned._add_current_item(current_item)
-        return cloned
+        pass
 
     def __getstate__(self) -> dict[str, Any]:
         """Control object pickling and return object fields as Dictionary.

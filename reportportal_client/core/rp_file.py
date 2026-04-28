@@ -47,4 +47,4 @@ class RPFile(object):
     @property
     def payload(self) -> dict[str, Any]:
         """Get HTTP payload for the request."""
-        return {"content": self.content, "contentType": self.content_type, "name": self.name}
+        pass
